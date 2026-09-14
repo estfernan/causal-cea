@@ -1,0 +1,58 @@
+# """
+# Configuration file for all simulation studies.
+# """
+
+# global simulation settings
+settings:
+  n_truth: 1000000
+  n_claims: 200
+  time_horizon: 4.0
+  n_init_cuts: 10
+  n_cuts: 10
+  n_intervals: 10  # Can be modified to increase/decrease the number of discrete intervals
+  outdir: "outputs"
+
+# algorithm specifications
+specs:
+  n_warmup: 1000
+  n_iter: 2000
+  n_boot: 2000
+  n_samples: 20000
+
+# data-generating parameters
+DGP:
+  mu01: 0.0
+  sigma01: 1.0
+  mu02: 0.0
+  sigma02: 1.0
+  p03: 0.5
+  nu00: 2.3
+  lambda00: 0.4
+  psi00: [-0.2, 0.1, 0.35]
+  nu01: 3.0
+  lambda01: 1.35
+  psi01: [0.7, 0.25, -0.1]
+  omegaL01: [0.0, -0.35, 0.1, 0.1]
+  sigmaL01: 1
+  omegaL02: [0.0, 0.15, -0.25, 0.4]
+  theta0: [0.0, 0.15, -0.6, 0.2, 0.15, -0.4]
+  eta0: 0.8
+  alpha0: 0.12
+  betaA0: 0.15
+  betaH0: [0.1, 0.45, -0.15, 0.30, -0.05]
+  gamma0: 0.4
+  nu0: 2.3
+  lambda0: 0.8
+  psi0: [-0.1, 0.15, 0.45, -0.2, 0.1, 0.35]
+  nu1: 2.8
+  lambda1: 1.2
+  psi1: [-0.1, 0.25, -0.45, 0.7, 0.25, -0.1]
+  omegaL1: [0.0, -0.15, 0.2, 0.1, -0.35, 0.1, 0.1]
+  sigmaL1: 1.0
+  omegaL2: [0.0, -0.2, 0.1, 0.1, 0.15, -0.25, 0.4]
+  theta: [0.0, 0.1, 0.25, 0.15, -0.6, 0.35, 0.2, 0.15, -0.4]
+  eta: 0.8
+  alpha: 0.12
+  betaA: 0.15
+  betaH: [0.05, 0.15, 0.1, 0.45, 0.1, -0.15, 0.30, -0.05]
+  gamma: 0.4
