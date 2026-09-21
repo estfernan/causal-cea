@@ -1,53 +1,77 @@
 #!/usr/bin/env Rscript
 
-library(kableExtra)
-library(tableone)
 library(dplyr)
-library(tibble)
+library(ggplot2)
+library(scales)
+library(readr)
 
-load("data/obsdat.RData")
+source("init.R")
 
-DATA_COLUMNS <- c("AGE", "WHITE", "MARRIED", "HIGH_SES", "METROPOLITAN", "NODES_EXAMINED", "FIGO_STAGE_IA", "DEATH", "ELAPSED_TIME", "TOTAL_COST", "CLAIM_COUNT", "AVERAGE_GAPTIME", "HIGH_COMORBIDITY", "ANY_OTHER_TX", "TREATMENT_INITIATED", "AVERAGE_COST")
-TREATMENT_OPTIONS <- c("1= None", "2= EBRT", "3= VBT")
-END_REASONS <- c("Death", "last Medicare claim", "12/31/2019")
-
-patient_data <- obsdat %>%
-  filter(!is.na(GAPTIME)) %>%
-  arrange(ID, INDEX) %>%
-  summarise(
-    AGE = first(AGE),
-    WHITE = first(RACE_WBO == 1),
-    MARRIED = first(as.logical(MARRIED)),
-    HIGH_SES = first(as.numeric(MEDIAN_INCOME) > 2),
-    METROPOLITAN = first(as.logical(METROPOLITAN)),
-    NODES_EXAMINED = first(as.logical(NODES_EXAMINED)),
-    FIGO_STAGE_IA = first(FIGO_STAGE_IB == 0),
-    DEATH = sum(DEATH, na.rm = TRUE) > 0,
-    ELAPSED_TIME = last(TIME),
-    TOTAL_COST = sum(UPCOMING_COST),
-    CLAIM_COUNT = n(),
-    AVERAGE_GAPTIME = mean(GAPTIME),
-    HIGH_COMORBIDITY = any(as.logical(HIGH_COMORBIDITY)),
-    ANY_OTHER_TX = any(as.logical(ANY_OTHER_TX)),
-    TREATMENT_INITIATED = any(as.logical(TREATMENT_READY)),
-    ADJUVANT_TREATMENT = factor(last(ADJUVANT_TREATMENT, order_by = INDEX), levels = TREATMENT_OPTIONS),
-    AVERAGE_COST = mean(UPCOMING_COST),
-    .by = ID
-  )
-
-tab1 <- CreateTableOne(
-  vars = DATA_COLUMNS,
-  strata = "ADJUVANT_TREATMENT",
-  data = patient_data,
-  test = FALSE,
-  smd = TRUE,
-  addOverall = TRUE
+# 1. Load intermediate simulation output files
+files <- list.files(
+  path = "outputs",
+  pattern = "^rep\\d{4}\\.RData$",
+  full.names = TRUE,
+  recursive = TRUE
 )
 
-tab1Mat <- print(tab1, smd = TRUE, quote = FALSE, noSpaces = TRUE, printToggle = FALSE)
+if (length(files) == 0) {
+  stop("No outputs found. Run simulations first.")
+}
 
-tab1Mat %>%
-  as.data.frame() %>%
-  rownames_to_column() %>%
-  kbl(format = "latex", booktabs = TRUE, escape = FALSE, align = "lccccc", linesep = "") %>%
-  save_kable("results/table2.tex")
+# tabout <- data.frame()
+# for (file in files) {
+#   load(file)
+#   tabout <- rbind(tabout, metrics)
+# }
+
+tabout <- data.frame()
+for (file in files) {
+  load(file)
+
+  # Extract interval tag from path if it exists, otherwise set as NA or "standard"
+  if (grepl("/c\\d{3}/", file)) {
+    interval_tag <- regmatches(file, regexpr("c\\d{3}", file))
+    metrics$interval_setting <- interval_tag
+  } else {
+    metrics$interval_setting <- "standard"
+  }
+
+  tabout <- rbind(tabout, metrics)
+}
+
+# Compute performance metrics for Table 1
+infotab <- tabout %>%
+  group_by(censoring_rate, framework, models, interval_setting) %>%
+  summarise(
+    n_reps   = n(),
+    avg_est  = mean(mean, na.rm = TRUE),
+    pct_bias = mean(pct_bias, na.rm = TRUE),
+    SE       = mean(SE, na.rm = TRUE),
+    RMSE     = mean(RMSE, na.rm = TRUE),
+    CI_width = mean(CI_width, na.rm = TRUE),
+    coverage = mean(coverage, na.rm = TRUE),
+    .groups  = "drop"
+  ) %>%
+  mutate(
+    censoring_level = label_censoring(censoring_rate),
+    intervals = label_intervals(interval_setting),
+    method_label = label_methods(framework, models)
+  )
+
+table1_formatted <- infotab %>%
+  transmute(
+    `Censoring Rate` = percent(censoring_rate),
+    `Method` = method_label,
+    `Interval Setting` = intervals,
+    `Estimate` = number(avg_est, accuracy = 0.001),
+    `% Bias` = percent(pct_bias, accuracy = 0.01),
+    `SE` = number(SE, accuracy = 0.001),
+    `RMSE` = number(RMSE, accuracy = 0.001),
+    `Width` = number(CI_width, accuracy = 0.001),
+    `CR (%)` = percent(coverage, accuracy = 0.1)
+  ) %>%
+  arrange(`Censoring Rate`, Method)
+
+# Export Table 1
+write_csv(table1_formatted, "results/table1.csv")
