@@ -4,13 +4,16 @@ This repository contains the application and simulation codebase, data-generatin
 
 ## Directory Structure
 
--   `/bash`: Reference SLURM batch scripts for HPC execution.
--   `/config`: YAML settings, random seed files, and DGP parameter configurations.
--   `/logs`: SLURM log destinations.
--   `/outputs`: Independent replication outputs.
--   `/pkg`: Core package containing R functions (`/pkg/R`) and Stan models (`/pkg/stan`).
--   `/results`: Final exported summary tables and figures.
--   `/scripts`: Execution scripts for true estimand generation and simulation studies.
+- `/bash`: Reference SLURM batch scripts for HPC execution.
+- `/config`: YAML settings, random seed files, and DGP parameter configurations.
+- `/logs`: SLURM log destinations.
+- `/outputs`: Intermediate MCMC sampling outputs and replication results.
+- `/pkg`: Core package containing R functions (`/pkg/R`) and Stan source models (`/pkg/stan`).
+- `/results`: Final exported summary tables and publication figures.
+- `/scripts`: Execution pipelines categorized into modular subdirectories:
+  - `/scripts/application`: SEER-Medicare empirical application pipeline.
+  - `/scripts/reporting`: Scripts for generating paper figures and summary tables.
+  - `/scripts/simulations`: Data-generating processes and Monte Carlo simulation runners.
 
 ## Step-by-Step Execution Guide for Simulations
 
