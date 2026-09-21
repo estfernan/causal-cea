@@ -1,12 +1,8 @@
 # Bayesian Inference for the Effects of Dynamic Treatments on Joint Longitudinal-Survival Outcomes: Applications in Cost-Effectiveness Analyses
 
-This repository contains the simulation codebase, data-generating processes, model estimation scripts, and pipelines for the manuscript.
+This repository contains the application and simulation codebase, data-generating processes, model estimation scripts, and pipelines for the manuscript.
 
-## Step-by-Step Execution Guide for Simulations
-
-Due to the computational requirements of fitting the models used in the manuscript across 1,000 Monte Carlo replications, the pipeline is designed to be modular rather than executed via a single wrapper script. This allows users to inspect, test, or re-run individual components (e.g., debugging of a single replication vs. scaling via HPC cluster arrays).
-
-### Directory Structure
+## Directory Structure
 
 -   `/bash`: Reference SLURM batch scripts for HPC execution.
 -   `/config`: YAML settings, random seed files, and DGP parameter configurations.
@@ -15,6 +11,10 @@ Due to the computational requirements of fitting the models used in the manuscri
 -   `/pkg`: Core package containing R functions (`/pkg/R`) and Stan models (`/pkg/stan`).
 -   `/results`: Final exported summary tables and figures.
 -   `/scripts`: Execution scripts for true estimand generation and simulation studies.
+
+## Step-by-Step Execution Guide for Simulations
+
+Due to the computational requirements of fitting the models used in the manuscript across 1,000 Monte Carlo replications, the pipeline is designed to be modular rather than executed via a single wrapper script. This allows users to inspect, test, or re-run individual components (e.g., debugging of a single replication vs. scaling via HPC cluster arrays).
 
 ### 1. Generate True Target Estimands
 
@@ -39,6 +39,33 @@ Once replication `.RData` files populate the `/outputs` directory, compile Table
 
 ``` r
 Rscript scripts/summarize_simulation_results.R
+```
+
+## Step-by-Step Execution Guide for SEER-Medicare Application
+
+### 1. Model Fitting & G-Computation
+
+Fit the confounder, survival, treatment initiation, and cost outcome models, followed by g-computation simulations:
+
+``` bash
+Rscript scripts/application/run_seer_application.R
+```
+
+Model specification (`parametric` or `semiparametric`) can be toggled inside `scripts/application/run_seer_application.R`. MCMC draws and trajectory arrays will be written to `outputs/analysis/[type]/MCMC/`.
+
+### 2. Generate Application Figures and Tables
+
+Once model fitting completes, execute the reporting scripts to build the final publication figures and tables in `/results`:
+
+``` bash
+# Generate posterior density plots (Figure 1)
+Rscript scripts/reporting/generate_fig1.R
+
+# Generate posterior predictive cost trajectories (Figure 2)
+Rscript scripts/reporting/generate_fig2.R
+
+# Generate qpplication summary table (Table 2)
+Rscript scripts/reporting/generate_table2.R
 ```
 
 ## Software Dependencies & Session Info
