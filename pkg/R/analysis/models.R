@@ -138,7 +138,7 @@ bayesian_gaussian_glm <- function(formula, data, method = "sample", chains = 1, 
 #'
 #' Bayesian Exponential Proportional-Hazards Modeling
 #'
-bayesian_exponential_ph <- function(formula, data, method = "sample", iter = 1000, warmup = 1000, refresh = 100, time_cuts = NULL_VAR, stan_name = EXPONENTIAL_PHREG, stan_path = STAN_PATH) {
+bayesian_exponential_ph <- function(formula, data, method = "sample", chains = 1, parallel_chains = 1, iter = 1000, warmup = 1000, refresh = 100, max_treedepth = NULL, time_cuts = NULL_VAR, format = "draws_matrix", stan_name = EXPONENTIAL_PHREG, stan_path = STAN_PATH) {
   stan_model <- .init_cmdstanr(stan_name, stan_path)
 
   f_call <- match.call(expand.dots = FALSE)
@@ -146,14 +146,15 @@ bayesian_exponential_ph <- function(formula, data, method = "sample", iter = 100
 
   mf <- .extract_model_frame(f_call, env)
 
-  # run stan's MCMC algorithm with extracted components
+  # run Stan's MCMC algorithm with extracted components
   fit <- .run_stan_algorithms(
     data = .extract_survival_objects(mf),
     stan_model = stan_model,
     method = method,
-    chains = 1L,
+    chains = chains,
     refresh = refresh,
-    warmup = warmup, iter = iter
+    warmup = warmup, iter = iter,
+    max_treedepth = max_treedepth
   )
 
   draws <- fit$draws(variables = c("lambda", "beta"), format = "matrix")
